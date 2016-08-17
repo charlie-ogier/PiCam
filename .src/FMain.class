@@ -1,0 +1,631 @@
+' Gambas class file
+
+'PiCam is a Pi camera GUI designed to run on the Rasberry Pi 3 using Raspbian
+
+Public bTrigger As Boolean                                          'Used to stop refreshing during initial setup routines
+Public bMove As Boolean                                             'Used to stop refreshing the Preview during the initial Form_Move setup routine
+Public bPreview As Boolean                                          'Controls the type of preview used
+Public bTimeLapse As Boolean                                        'Controls if a normal photo is to be taken or time lapse photos
+Public bStopPreview As Boolean                                      'To stop attemps to start the Preview
+Public siZoom As Short                                              'To control the Preview Zoom feature
+Public siPreviewH As Short = 350                                    'The height of the Preview window
+Public siPreviewW As Short = 350                                    'The width of the Preview window
+Public sLocation As String = User.Home &/ "Pictures/PiCam"          'Stores the photo folder
+Public sTLFolder As String                                          'Stores the Time Lapse folder name
+Public sTLUsersFileName As String                                   'Stores the time lapse file name
+Public sStillOrVid As String = "raspistill"                         'Store whether it's a still or, for a later version of the program,  a video
+Public sIFX As String                                               'Stores the camera 'Effects'setting
+Public sLastPhoto As String                                         'Stores the last photo file name
+Public fDelay As Float = 0.9                                        'Stores the delay before refreshing the display (Too fast and it doesn't work!)
+Public sExposure As String                                          'Stores the camera 'Exposure' setting
+Public sFlip As String                                              'Stores the image 'Flip' settings
+Public sRotation As String                                          'Stores the image 'Rotation' settings
+Public iMilliSeconds As Integer                                     'Stores the amount of milliseconds between time lapse photos
+Public iTimeLapseCounter As Integer                                 'Keeps track of when the next photo needs taking
+Public siUpDown As Short                                            'Preview window align adjuastment
+Public siRightLeft As Short                                         'Preview window align adjuastment
+Public bAlign As Boolean                                            'To stop the Preview disapearing when the form looses focus during alignment
+Public Enum CameraButton, TimerButton, HaltButton                   'Enum variables
+
+Public Sub Form_Open()                                              'Form opens...
+
+LabelVersion.text = "PiCam V0.2.6"                                  'Set the version label
+Me.Center                                                           'Centre the form on the monitor
+SetUpFolder                                                         'Make sure the folder to store the photos has been created
+SetupEffects                                                        'Setup the 'Effects' ComboBox
+SetUpSize                                                           'SetUp the photo size ComboBox
+SetUpExposure                                                       'SetUp the 'Exposure' ComboBox
+GetSettings                                                         'Get the settings from last session
+CreateRAMDrive                                                      'Create a RAM drive to store the SSH Preview photo
+PreviewSize                                                         'Adds text to the Preview size indicator
+Wait fDelay                                                         'Wait
+If Not bPreview Then SetUpPreview                                   'Start the Preview
+bTrigger = True                                                     'Now the various setup routines have been setup it's OK to run the Preview routine when options are changed
+Wait                                                                'Updates the form on the screen
+
+End
+
+Public Sub SetUpFolder()                                            'To setup a folder to store the photos
+
+If Not Exist(sLocation) Then                                        'If the folder does not exist then..
+  Mkdir sLocation                                                   'Create the folder
+Endif
+
+If Not Exist(sLocation &/ "time_lapse") Then                        'If the folder does not exist then..
+  Mkdir sLocation &/ "time_lapse"                                   'Create the folder
+Endif
+
+End
+
+Public Sub SetupEffects()                                           'Setup the 'Effects' ComboBox
+Dim sTemp As String                                                 'Temp string
+Dim sEffect As String[] = ["none", "negative", "solarise", "sketch", 
+"denoise", "emboss", "oilpaint", "hatch", "gpen", "pastel", "watercolour", 
+"film", "blur", "saturation", "colourswap", "washedout", 
+"posterise", "colourpoint", "colourbalance", "cartoon"]             'Stores all the 'Effects' options
+
+For Each sTemp In sEffect                                           'For each 'Effects'.. 
+  ComboBoxEffects.Add(sTemp)                                        'Add the 'Effect' to the ComboBox
+Next                                                                'Repeat untill all have been added
+
+ComboBoxEffects.text = "none"                                       'Set the ComboBox with the first setting
+
+End
+
+Public Sub SetUpSize()                                              'To setup the size ComboBox
+Dim sTemp As String                                                 'Temp string
+Dim siCount As Short                                                'Counter
+Dim sSize As String[] = ["64 x 64", "100 x 100", "200 x 200", "300 x 300", "320 x 480", 
+"400 x 400", "500 x 500", "600 x 600", "700 x 700", "800 x 600", "800 x 800", "1024 x 768",
+"1280 x 960", "1280 x 720", "1280 x 800", "1280 x 1024", "1440 x 900", "1600 x 1200", 
+"1680 x 1050", "1920 x 1080", "1920 x 1200", "2592 x 1944"]         'sSize stores all the sizes to display in the ComboBox"
+
+For Each sTemp In sSize                                             'For each 'Size' ..
+  ComboBoxPhotoSize.Add(sTemp, siCount)                             'Add the size and index it
+  Inc siCount                                                       'Increase the counter
+Next                                                                'Keep going until all are added
+
+ComboBoxPhotoSize.Index = 10                                        'Set the defauld value e.g. "400 x 400"
+
+End
+
+Public Sub SetUpExposure()                                          'Setup the 'Exposure' ComboBox
+Dim sTemp As String                                                 'Temp string
+Dim siCount As Short                                                'Counter
+Dim sIndex As Short = 1                                             'sIndex stores the index value to display ('auto' is the default)
+Dim sExposureList As String[] = ["off", "auto", "night", 
+"nightpreview", "backlight", "spotlight", "sports", "snow", 
+"beach", "verylong", "fixedfps", "antishake", "fireworks"]          'Store the 'Exposure' options in sExposureList
+
+For Each sTemp In sExposureList                                     'For each 'Exposure' ..
+  ComboBoxExposure.Add(sTemp, siCount)                              'Add each to the ComboBox and index
+  If sExposureList[siCount] = sExposure Then sIndex = siCount       'If it matches the Exposure settings then set the index number
+  Inc siCount                                                       'Increase the counter
+Next
+
+ComboBoxExposure.Index = sIndex                                     'Set the item to display e.g. 'auto'
+sExposure = " -ex " & sExposureList[sIndex]                         'Set the 'sExposure' variable
+
+End
+
+Public Sub GetSettings()                                            'Get the saved settings
+
+Try siZoom = Val(Settings["siZoom"])                                'Get the zoom amount for the Preview window
+sExposure = Settings["sExposure"]                                   'Get the 'Exposure' setting
+If sExposure = " -ex " Or sExposure = "" Then sExposure = " -ex auto" 'Put something in the string if not defined
+sFlip = Settings["sFlip"]                                           'Get the 'Flip' settings
+If sFlip Then SetUpFlip                                             'If there is a flip setting go and set it up
+sRotation = Settings["sRotation"]                                   'Get the 'Rotation' settings
+If sRotation Then SetUpRotation                                     'If there is a rotation setting go and set it up
+sIFX = Settings["sIFX"]                                             'Get the 'Effects' setting
+If sIFX = " -ifx " Or sIFX = "" Then sIFX = " -ifx none"            'Put something in the string if not defined
+Try ComboBoxPhotoSize.index = Settings["Size.Index"]                'Get the 'Size' setting
+ComboBoxEffects.text = Trim(Replace(sIFX, "-ifx", ""))              'Put the right setting in the ComboBox
+ComboBoxExposure.text = Trim(Replace(sExposure, "-ex", ""))         'Put the right setting in the ComboBox
+Try siUpDown = Settings["siUpDown"]                                 'Get the Preview alignment adjustment value
+Try siRightLeft = Settings["siRightLeft"]                           'Get the Preview alignment adjustment value
+
+End
+
+Public Sub CreateRAMDrive()                                         'To create a RAM drive to hold the SSH Preview picture
+Dim sFstab As String                                                'To store the details in the fstab file
+
+If Not Exist("/var/tmp") Then Mkdir "/var/tmp"                      'Does this folder exist, if not create it
+
+sFstab = File.Load("/etc/fstab")                                    'Load the contents of fstab into sFstab
+
+If Not InStr(sFstab, "tmpfs /var/tmp tmpfs nodev,nosuid,size=3M 0 0") Then 'If the sting we need to create the 3Meg RAM drive is not there then..
+  sFstab &= "\ntmpfs /var/tmp tmpfs nodev,nosuid,size=3M 0 0\n"     'Add the string to the end of the file
+  File.Save(User.Home &/ "fstab", sFstab)                           'Save the file to the Home folder
+  Shell "sudo mv ~/fstab /etc/fstab"                                'Move the file to the 'etc' folder
+  Shell "sudo mount -a"                                             'Mount all drives including our new one
+Endif
+
+End
+
+Public Sub SetUpFlip()                                              'Setup the Flip RadioButtons
+
+If InStr(sFlip, "vf") And If InStr(sFlip, "hf") Then                'If 'Both' then..
+  RadioButtonBoth.Value = True                                      'Set 'Both' 
+  Return                                                            'Get out of here
+End If
+
+If InStr(sFlip, "vf") Then RadioButtonVertical.Value = True         'If 'Vertical' then set 'Vertical'
+If InStr(sFlip, "hf") Then RadioButtonHorizontal.Value = True       'If 'Horizontal' then set 'Horizontal'
+
+End
+
+Public Sub SetUpRotation()
+
+If InStr(sRotation, "0") Then RadioButtonRotation0.value = True     'If setting is for 0 degrees click the RadioButton
+If InStr(sRotation, "90") Then RadioButtonRotation1.value = True    'If setting is for 90 degrees click the RadioButton
+If InStr(sRotation, "180") Then RadioButtonRotation2.value = True   'If setting is for 180 degrees click the RadioButton
+If InStr(sRotation, "270") Then RadioButtonRotation3.value = True   'If setting is for 270 degrees click the RadioButton
+
+End
+
+Public Sub SetUpPreview()                                           'To start the Preview
+Dim siPosX, siPosY As Short                                         'To store the position required to place the Preview in the correct position
+
+If bStopPreview Then Return                                         'Stop attempts to start the preview again
+
+siPosX = FMain.X + (15 + siRightLeft)                               'Set X position to place the Preview window
+siPosY = FMain.Y + (120 + siUpDown)                                 'Set Y position to place the Preview window
+
+'Print "raspistill -t 0 -p " & Str(siPosX) & "," & Str(siPosY) & ",350,350" & sExposure & sFlip & sRotation & sIFX 'For debugging only
+
+Shell "raspistill -t 0 -p " & Str(siPosX) & "," & Str(siPosY) & 
+"," & siPreviewH & "," & siPreviewW & sExposure & sFlip &
+ sRotation & sIFX                                                   'Shell all the details necessary to generate a Preview window and loacte it 'on' the program in the correct place
+
+bStopPreview = True                                                 'Stop attempts to start the preview again
+
+TimerPreviewControl.Start                                           'To slow down the preview generation
+
+End
+
+Public Sub TimerPreviewControl_Timer()                              'To create a delay which prevents the calling of the SetUpPreview too often
+
+bStopPreview = False                                                'Reset the variable
+TimerPreviewControl.Stop                                            'Stop this Timer
+TextLabel1.Text = "<b>Please wait<p>If you are looking at this over a SSH connection press the 'Preview type' button</b>"
+                                                                    'Add a message behind the preview
+End
+
+Public Sub KillPreview()                                            'This is to stop the preview window if the settings change or the form is moved etc
+Dim sTemp As String                                                 'Temp string
+Dim sLoop, sLoopHold As String                                      'Used to store strings as blank spaces are removed
+Dim sPID As String                                                  'To store the PID number of the 'Preview' so it can be 'Killed'
+Dim sSplit As String[]                                              'To store the results of the 'Shell' once split into their components
+Dim siCount1, siCount2 As Short                                     'Counters
+
+TextLabel1.Text = "<b>Please wait</b>"                              'Add a message behind the preview
+
+Shell "ps aux | grep raspistill" To sTemp                           'Get data about any 'raspi***' programs running (i.e. the Preview)"
+
+sSplit = Split(sTemp, "\n")                                         'Split the data by NewLine
+
+For Each sLoop In sSplit                                            'KILL THEM ALL!!!! If there 5 instances of the program running this will deal with them ALL!!
+  If sLoop = "" Then Break                                          'If no data then get out of here
+
+    Repeat                                                          'This loop will repeat until all the 'Double Spaces' have been removed
+      sLoopHold = sLoop                                             'Pass the string to SLoopHold to use as comparison
+      sLoop = Replace(sLoop, "  ", " ")                             'Remove Double spaces with a single space
+    Until sLoop = sLoopHold                                         'Keep going until the 2 strings are the same (i.e. there are no more double spaces) 
+
+  siCount1 = InStr(sLoop, " ")                                      'Find the first space in the string
+  siCount2 = InStr(sLoop, " ", siCount1 + 1)                        'Find the second space in the string
+  If Not InStr(sLoop, "-t 0") Then Continue                         'If it does not match the Preview details go to 'Next' 2 lines below
+  sPID = Trim(Mid(sLoop, siCount1, siCount2 - siCount1))            'Get the PID number out of the data collected
+  Shell "kill -9 " & sPID                                           'Kill the Preview program
+ Next
+
+End
+
+Public Sub GetPhotoNumber() As String                               'To get a number for the next photo
+Dim bCatch As Boolean
+Dim siPhotoName As Short                                            'To trigger when a photo is NOT found
+
+Repeat                                                              'Start
+  If Not Exist(sLocation &/ sTLFolder &/ Format(Str(siPhotoName), 
+  "0000") & ".jpg") Then                                            'If the photo does NOT exist then.. 
+    bCatch = True                                                   'Set bCatch As 'True'
+  Else                                                              'Else..
+    Inc siPhotoName                                                 'Increase the number of the photo
+  End If
+Until bCatch = True                                                 'Keep going until the photo number is NOT found
+
+Return Format(Str(siPhotoName), "0000")                             'Return the name which will be used for the next photo
+
+End
+
+Public Sub Form_Move()                                              'What to do if the form is moved
+
+If bMove = True Then                                                'Only carry on if this is not during initial setup
+  KillPreview                                                       'Kill the Preview
+  Wait fDelay                                                       'Wait
+  If Not bPreview Then SetUpPreview                                 'Restart the preview, the position needs to be changed as the form has moved
+End If
+
+bMove = True                                                        'OK setup done, next time this routine will run
+
+End
+
+Public Sub ToolButtonTakePhoto_Click()                              'What to do when the 'Take a photo' button is clicked
+Dim sPhotoName As String = "0"                                      'The first photo will be '0'
+Dim sSplit As String[]                                              'To split the photo size elements into 2
+Dim sTemp As String                                                 'Temp string 
+
+If Not bPreview Then                                                'If set for 'Live' preview then..
+  KillPreview                                                       'Kill the Preview
+Else                                                                'Else
+  TimerSSHPreview.Stop                                              'Stop the 'SSH' preview timer
+  Wait fDelay                                                       'Wait
+End If
+
+LabelPhotoTakenName.text = "Please wait.."                          'Activate a 'Please wait..' message
+ToolButtonTakePhoto.Enabled = False                                 'Disable the shutter button
+Wait                                                                'Update the screen
+
+sPhotoName = GetPhotoNumber()                                       'Go to the GetPhotoNumber routine and store the next available number in siPhotoName
+
+sTemp = ComboBoxPhotoSize.Text                                      'Get the text from the photo size ComboBox e.g. '400 x 400'
+sSplit = Split(sTemp, "x")                                          'Split it by the 'x'
+sSplit[0] = Trim(sSplit[0])                                         'Trim the first number e.g '400'
+sSplit[1] = Trim(sSplit[1])                                         'Trim the second number e.g '400' (This is for future proofing in case they become '800 x 1000' or whatever)
+
+'Print sStillOrVid & " -t 1 -w " & Str(sSplit[0]) & " -h " & Str(sSplit[1]) & sExposure & sFlip & sRotation & " -n " & sIFX & " -o " & sLocation &/ sTLFolder &/ sPhotoName & ".jpg" 'For debugging only
+
+Shell sStillOrVid & " -t 1 -w " & Str(sSplit[0]) & " -h " & Str(sSplit[1]) & sExposure & sFlip & sRotation & " -n " & sIFX & " -o " & sLocation &/ sTLFolder &/ sPhotoName & ".jpg"
+                                                                    'Shell all the collected details necessary to take the photo
+ToolButtonTakePhoto.Enabled = True                                  'Enable the shutter button
+
+HBox8.Enabled = False                                               'Disable all buttons
+Wait fDelay                                                         'Wait the time nessary for 'raspistill' to reset
+If Not bPreview Then SetUpPreview                                   'Start the Preview again
+HBox8.Enabled = True                                                'Re-enable all buttons
+LabelPhotoTakenName.text = "Photo '" & sPhotoName & ".jpg' taken"   'Display the name of the photo e.g. '24.jpg'
+LabelCommand.text = sStillOrVid & " -t 1 -w " & Str(sSplit[0]) & " -h " & Str(sSplit[1]) & sExposure & sFlip & sRotation & " -n " & sIFX & " -o " & sLocation &/ sTLFolder &/ sPhotoName & ".jpg"
+                                                                    'Put the command line on the display
+If bPreview Then TimerSSHPreview.start                              'If set to 'SSH' preview then start the timer
+Wait fDelay                                                         'Wait
+
+End
+
+Public Sub ToolButtonViewPhotos_Click()                             'What to do if the 'View photos' button is clicked
+Dim sPhotoName As String                                            'To store the last photo taken
+Dim siPhotoName As Short
+
+sPhotoName = GetPhotoNumber()                                       'Get the next available photo name e.g. 0024
+siPhotoName = Val(sPhotoName)
+Dec siPhotoName                                                     'We don't want the next available number but the last taken so decrease the number by 1 e.g. 23
+If siPhotoName < 0 Then Return
+sPhotoName = Format(Str(siPhotoName), "0000")
+
+Shell "gpicview " & sLocation &/ sPhotoName & ".jpg"                'Open the Pi's photo view and point it to the last photo taken
+If Not bPreview Then RestartPiCamMessage                            'Put the program on hold if on live feed preview
+
+End
+
+Public Sub ToolButtonTimeLaps_Click()                               'What to do if the 'Set up time lapse' button is clicked
+  
+If Not bPreview Then KillPreview                                    'If set for 'Live' preview then kill the preview
+Time_Lapse_Settings.ShowModal                                       'Show the Time Lapse Setting window
+Wait fDelay                                                         'Wait
+If Not bPreview Then SetUpPreview                                   'If set for 'Live' preview then start the preview
+If bTimeLapse = True Then ToolButtonDisplay(TimerButton)            'If the timings have been 'Set' then show the Timer toolbar button
+If Not bTimeLapse = True Then ToolButtonDisplay(CameraButton)       'If the timings have NOT been 'Set' then show the Camera toolbar button
+
+End
+
+Public Sub ToolButtonDisplay(siValue As Short)                      'To sort out which button to display and which to hide
+
+ToolButtonHalt.Visible = False                                      'Hide the button
+ToolButtonTimeLapseStart.Visible = False                            'Hide the button
+ToolButtonTakePhoto.Visible = False                                 'Hide the button
+
+If siValue = CameraButton Then ToolButtonTakePhoto.Visible = True   'Show Camera button if requested
+If siValue = TimerButton Then ToolButtonTimeLapseStart.Visible = True 'Show Timer button if requested
+If siValue = HaltButton Then ToolButtonHalt.Visible = True           'Show Halt button if requested
+
+End
+
+Public Sub ToolButtonOpenFolder_Click()                             'What to do if the Open Folder button is clicked
+
+Shell "xdg-open " & sLocation                                       'Ask the OS to open the folder, hopefully with a file manager! - NOTE pcmanfm wont open a 2nd instance of itself
+If Not bPreview Then RestartPiCamMessage                            'Put the program on hold if on live feed preview
+
+End
+
+Public Sub ToolButtonAbout_Click()                                  'What to do if the 'About' button is clicked
+
+TimerPreviewControl.Stop
+KillPreview                                                         'Stop the Preview
+Me.Hide                                                             'Hide this form
+bStopPreview = True                                                 'Hold the preview
+About.ShowModal                                                     'Show the 'About' form
+bStopPreview = False                                                'Allow preview
+Me.Show                                                             'Show this form
+Wait fDelay                                                         'Wait
+If Not bPreview Then SetUpPreview                                   'Restart the Preview
+
+End
+
+Public Sub ToolButtonExit_Click()                                   'What to do if the 'Exit' button is clicked
+
+Form_Close                                                          'Go to the Form_Close routine
+
+End
+ 
+Public Sub ComboBoxEffects_Click()                                  'What to do if the 'Effects' ComboBox is changed
+
+If bTrigger = True Then                                             'Only carry on if this is not during initial setup
+  sIFX = " -ifx " & ComboBoxEffects.text                            'Create the string for the 'Effects'
+  KillPreview                                                       'Kill the Preview
+  Wait fDelay                                                       'Wait
+  If Not bPreview Then SetUpPreview                                 'Restart the Preview
+End If
+
+End
+
+Public Sub ComboBoxExposure_click()                                 'What to do when the 'Exposure' setting is changed
+
+sExposure = " -ex " & ComboBoxExposure.Text                         'Change the exposure string
+If bTrigger = True Then                                             'Only carry on if this is not during initial setup
+  KillPreview                                                       'Kill the Preview
+  Wait fDelay                                                       'Wait
+  If Not bPreview Then SetUpPreview                                 'Restart the Preview
+End If
+
+End
+
+Public Sub RadioFlip_click()                                        'What to do if the 'Photo Flip' options are changed
+
+If RadioButtonNone.value = True Then sFlip = ""                     'If 'No flip" is selected
+If RadioButtonVertical.value = True Then sFlip = " -vf "            'If 'Vertical flip" Is Selected
+If RadioButtonHorizontal.value = True Then sFlip = " -hf "          'If 'Horizontal flip' is selected
+If RadioButtonBoth.value = True Then sFlip = " -vf -hf "            'If 'Both' is selected
+
+If bTrigger = True Then                                             'Only carry on if this is not during initial setup
+  KillPreview                                                       'Kill the Preview
+  Wait fDelay                                                       'Wait
+  If Not bPreview Then SetUpPreview                                 'Restart the Preview
+End If
+
+End
+
+Public Sub RotationSet_click()                                      'What to do if the Rotation RadioButtons are clicked
+ 
+If RadioButtonRotation0.Value = True Then sRotation = ""            'If no rotation requested
+If RadioButtonRotation1.Value = True Then sRotation = " -rot 90 "   'If 90 degree rotation requested
+If RadioButtonRotation2.Value = True Then sRotation = " -rot 180 "  'If 180 degree rotation requested
+If RadioButtonRotation3.Value = True Then sRotation = " -rot 270 "  'If 270 degree rotation requested
+
+If bTrigger = True Then                                             'Only carry on if this is not during initial setup
+  KillPreview                                                       'Kill the Preview
+  Wait fDelay                                                       'Wait
+  If Not bPreview Then SetUpPreview                                 'Restart the Preview
+End If
+ 
+End
+
+Public Sub ToolButtonCopy_Click()                                   'What to do if the 'Copy command' button is clicked 
+
+Clipboard.Copy(LabelCommand.text)                                   'Copy the command to the clipboard
+
+End
+
+Public Sub Form_Close()                                             'What to do if the form is about to close
+
+KillPreview                                                         'Stop the Preview
+Settings["sExposure"] = sExposure                                   'Save the 'Exposure' setting
+Settings["sFlip"] = sFlip                                           'Save the 'Flip' settings
+Settings["sRotation"] = sRotation                                   'Save the 'Rotation' settings
+Settings["sIFX"] = sIFX                                             'Save the 'Effects' setting
+Settings["Size.Index"] = ComboBoxPhotoSize.Index                    'Save the 'Size' setting
+Settings["siZoom"] = Str(siZoom)                                    'Save the 'siZoom' setting (Preview window size)
+Settings["siUpDown"] = Str(siUpDown)                                 'Save Preview alignment adjustment value
+Settings["siRightLeft"] = Str(siRightLeft)                          'Save Preview alignment adjustment value
+Me.Close                                                            'Close the form
+
+End
+
+Public Sub ToolButtonReset_Click()                                  'What to do when the 'Reset' button is clicked
+
+KillPreview                                                         'Stop the Preview
+bTrigger = False                                                    'Stop unnecessary refreshes
+Settings["sExposure"] = ""                                          'Reset the setting
+Settings["sFlip"] = ""                                              'Reset the setting
+RadioButtonNone.value = True                                        'Reset the RadioButton
+Settings["sRotation"] = ""                                          'Reset the setting
+RadioButtonRotation0.value = True                                   'Reset the RadioButton
+Settings["sIFX"] = ""                                               'Reset the setting
+Settings["Size.Index"] = 10                                         'Reset the setting
+Settings["siZoom"] = 0                                              'Reset the setting
+siZoom = 0                                                          'Reset the Preview zoom
+Form_Open                                                           'Restart the program
+End
+
+Public Sub RestartPiCamMessage()                                    'Put the program on hold to stop the Preview window dominating the screen
+
+KillPreview                                                         'Stop the Preview
+bMove = False                                                       'Stop the Form_move routine reactivating the Preview
+Me.Hide                                                             'Hide this form
+Message.Title = "PiCam on hold"                                     'Give message box a header
+Message.Info("Click to contiue using PiCam", "Continue")            'Put a message up 
+bMove = True                                                        'Allow the Form_move routine to reactivate the Preview
+Me.Show                                                             'Show this form
+If Not bPreview Then SetUpPreview                                   'Restart the Preview
+
+End
+
+Public Sub ToggleButtonPreview_Click()                              'What to do if the 'Preview type' toggle button is clicked
+
+If bPreview = True Then                                             'If set for 'SSH' preview then..
+  bPreview = False                                                  'Set for 'Live' preview
+  LabelPreview.text = "Live preview"                                'Put up a label
+  TimerSSHPreview.Stop                                              'Stop the SSH preview timer
+  PictureBoxSSHPreview.Visible = False                              'Hide the SSH Preview PictureBox
+  Wait fDelay                                                       'Wait
+  SetUpPreview                                                      'Set up the live preview
+Else                                                                'Else..
+  bPreview = True                                                   'Set for 'SSH' preview
+  LabelPreview.Text = "SSH preview"                                 'Put up a label
+  KillPreview                                                       'Stop the preview
+  Wait fDelay
+  PictureBoxSSHPreview.Visible = True                               'Show the SSH preview PictureBox
+  TimerSSHPreview.delay = 800                                       'Setup the SSH timer delay to 0.8 of a second (75 times a minute)
+  Try Kill "/var/tmp/preview.jpg"                                   'If there is a picture in the RAM disk get rid of it
+  TimerSSHPreview.Start                                             'Start the timer
+Endif
+
+End
+
+Public Sub TimerSSHPreview_Timer()                                  'To take a picture for preview purposes when the Pi is being SSHed into
+
+Shell sStillOrVid & " -t 1 -w " & Str(350 + (siZoom * 100)) & " -h " & Str(350 + (siZoom * 100)) & sExposure & sFlip & sRotation & sIFX & " -n -o /var/tmp/preview.jpg" 
+                                                                    'Shell all the details necessary to generate a Preview window and loacte it 'on' the program in the correct place
+If Exist("/var/tmp/preview.jpg") Then                               'If a picture is stored in the RAM disk then..
+  PictureBoxSSHPreview.Picture = Picture.Load("/var/tmp/preview.jpg") ' Display it
+Endif
+
+End
+
+Public Sub ToolButtonTimeLapseStart_Click()                         'What to do if the Start Time Lapse button is clicked
+
+If Not Exist(sLocation &/ sTLFolder) Then                           'If the folder does not exist then..
+  Mkdir sLocation &/ sTLFolder                                      'Create the folder
+Endif
+
+PanelExpander.Visible = False                                       'Hide a panel
+LabelCommand.Visible = False                                        'Hide a label
+LabelTimeToGo.Visible = True                                        'Show the 'Time to go' label
+ToolButtonDisplay(HaltButton)                                       'Show the 'Halt' button
+Wait fDelay                                                         'Wait
+ToolButtonTakePhoto_Click                                           'Take a picture
+TimerTimeLapse.Start                                                'Start the time lapse timer
+
+End
+
+Public Sub ToolButtonHalt_Click()                                   'What to do if the 'Halt' button is clicked
+
+TimerTimeLapse.Stop                                                 'Stop the time lapse timer
+ToolButtonDisplay(CameraButton)                                     'Show the 'Camera' button
+PanelExpander.Visible = True                                        'Show a panel
+LabelCommand.Visible = True                                         'Show a label
+LabelTimeToGo.Visible = False                                       'Hide the 'Time to go' label
+sTLFolder = ""                                                      'Empty the time lapse folder string
+
+End
+
+Public Sub TimerTimeLapse_Timer()                                   'This takes the photos dureing the time lapse sequence
+
+LabelTimeToGo.text = "Time until next photo is " & Str(((iMilliSeconds - iTimeLapseCounter) / 1000) - 1) & " Seconds"
+                                                                    'Sets up the text to display in the 'Time to go' label
+iTimeLapseCounter += 1000                                           'Increase the counter by 1000 milliseconds (1 second)
+If iTimeLapseCounter = iMilliSeconds Then                           'If this matches the set time in milliseconds then
+  ToolButtonTakePhoto_Click                                         'Take a photo
+  iTimeLapseCounter = 0                                             'Reset the counter
+End If
+
+End
+
+Public Sub Form_Deactivate()                                        'What to do if the form is deactivated
+
+If bAlign = True Then Return                                        'To prevent this routine closing the Preview during alignment
+
+If Not bPreview Then KillPreview                                    'Kill the preview
+ 
+End
+
+Public Sub Form_Activate()                                          'What to do if the form is activated
+
+If Not bTrigger Then Return                                         'During initial setup get out of here
+
+If Not bPreview Then                                                'If set for 'Live' preview then..
+  Wait fDelay                                                       'Wait
+  SetUpPreview                                                      'Setup the preview
+Endif
+
+End
+
+Public Sub PreviewSize()                                            'To control the size of the preview
+Dim siIncrease As Short[] = [360, 360, 550, 660, 376, 368, 376, 846, 356, 356, 350, 350] 'Sizes of various panels
+
+If siZoom > 6 Then siZoom = 6                                       'Max size of zoom = 7
+If siZoom < 0 Then siZoom = 0                                       'Min size of zoom = 1
+
+If siZoom = 0 Then                                                  'If zoom is at minimum then..
+  ToolButtonPreviewDown.Enabled = False                             'Disable the 'Down' button
+Else                                                                'Else..
+  ToolButtonPreviewDown.Enabled = True                              'Enable the 'Down' button
+End If
+
+If siZoom = 6 Then                                                  'If zoom is at maximum then..
+  ToolButtonPreviewUp.Enabled = False                               'Disable the 'Up' button
+Else                                                                'Else
+  ToolButtonPreviewUp.Enabled = True                                'Enable the 'Up' button
+End If
+
+LabelPreviewNo.Text = Str(siZoom + 1) & " of 7"                     'Display the Preview number
+TextLabel1.H = siIncrease[0] + (siZoom * 100)                       'Set height of TextLabel
+TextLabel1.W = siIncrease[1] + (siZoom * 100)                       'Set width of TextLabel
+Me.H = siIncrease[2] + (siZoom * 100)                               'Set height of Form
+Me.W = siIncrease[3] + (siZoom * 100)                               'Set width of Form
+Panel1.H = siIncrease[4] + (siZoom * 100)                           'Set height of Panel1
+Panel1.W = siIncrease[5] + (siZoom * 100)                           'Set width of Panel1
+Panel2.H = siIncrease[6] + (siZoom * 100)                           'Set height of Panel2
+Panel2.W = siIncrease[7] + (siZoom * 100)                           'Set width of Panel2
+PictureBoxSSHPreview.W = siIncrease[8] + (siZoom * 100)             'Set width of SSH PictureBox
+PictureBoxSSHPreview.H = siIncrease[9] + (siZoom * 100)             'Set height of SSH PictureBox 
+siPreviewW = siIncrease[11] + (siZoom * 100)                        'Set width of Preview 
+siPreviewH = siIncrease[10] + (siZoom * 100)                        'Set height of Preview  
+
+If Not bTrigger Then Return                                         'If doing program initilisation then get out of here
+
+KillPreview                                                         'Kill the preview
+
+If Not bPreview Then                                                'If set for 'Live' preview then..
+  Wait fDelay                                                       'Wait
+  SetUpPreview                                                      'Start the preview
+Endif
+
+End
+
+Public Sub ToolButtonPreviewUp_Click()                              'What to do if the Preview 'Up' button is clicked
+
+Inc siZoom                                                          'Increase the siZoom variable
+PreviewSize                                                         'Go to the resize routine
+
+End
+
+Public Sub ToolButtonPreviewDown_Click()                            'What to do if the Preview 'Down' button is clicked
+
+Dec siZoom                                                          'Decrease the siZoom variable
+PreviewSize                                                         'Go to the resize routine 
+
+End
+
+Public Sub ToolButtonViewTimeLapse_Click()                          'What to do if the 'View time lapse' button is clicked
+
+Me.Hide                                                             'Hide this form
+KillPreview                                                         'Kill the preview
+bPreview = True                                                     'Stop the prieview reappearing
+PlayTimeLaps.ShowModal                                              'Show the Play time lapse form
+Me.Show                                                             'Show this form
+bPreview = False                                                    'Allow the prieview to reappear
+
+If Not bPreview Then                                                'If set for 'Live' preview then..
+  Wait fDelay                                                       'Wait
+  SetUpPreview                                                      'set up the preview
+Endif
+
+End
+
+Public Sub ToolButtonAlign_Click()                                  'What to do when the 'Align' toolbar button is clicked
+
+bAlign = True                                                       'To prevent the Preview disappearing during alignment
+AlignPreview.Show                                                   'Show the alignment form
+
+
+End

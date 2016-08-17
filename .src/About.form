@@ -1,0 +1,24 @@
+# Gambas Form File 3.0
+
+{ Form Form
+  MoveScaled(0,0,106,83.3333)
+  Arrangement = Arrange.Vertical
+  Padding = 5
+  { TextLabel1 TextLabel
+    MoveScaled(1,1,103,69)
+    Expand = True
+    Text = ("PiCam (c) Charlie Ogier software 2016<p>\n\nThis program is written in Gambas 3.8.4 for the Raspberry Pi 3 using Raspbian<br>\nNote that this program adds a line to the /etc/fstab file to create a RAM disk of 3Meg. This is so that the SSH preview window photo, which is taken about 75 times a minute,  is stored in RAM and not on the SD card, this is more efficient and puts less wear on the SD card. The program uses the 'raspistill' command to create the Standard Preview window which sits on top of this, and every other, program. If it is out of line with this program click the 'Align' toolbar button which will allow you to alter this.<p>\n\n<b>Version 0.1.0 </b>A place to start<br>\n<b>Version 0.2.0 </b>Better preview - Program now more responsive and using less resources - Can now click to take a photo every second - Photo size option added - Exposure option added - Command line copy feature added - Access to the Photo Viewer added<br>\n<b>Version 0.2.1</b>Added image flip options - Added image rotation options<br>\n<b>Version 0.2.2 09/06/2016</b>Added a preview window that works across SSH by taking a photo every 0.9 second and storing in a RAM drive<br>\n<b>Version 0.2.3 25/06/2016</b>Added option to increase the size of the preview window. Added time lape viewer<br>\n<b>Version 0.2.4 25/06/2016</b>Fixed time lapse delay bug<br>\n<b>Version 0.2.5 02/08/2016</b>Added code to stop preview reappearing during time lapse replays<br>\n<b>Version 0.2.6 14/08/2016</b>Added code to allow alignment of the Preview window<p>\n\nComments and/or bugs to bugs@cogier.com<p>\n\nThis program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by \nthe Free Software Foundation; either version 2 of the License, or (at your option) any later version.<p>\n\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.<p>\n\nIf you require a copy of the GNU General Public License please write to the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,  Boston, MA  02110-1301  USA")
+  }
+  { HBox1 HBox
+    MoveScaled(28,70,53,4)
+    Padding = 2
+    { Panel1 Panel
+      MoveScaled(18,1,9,2)
+      Expand = True
+    }
+    { ButtonDone Button
+      MoveScaled(39,0,12,3)
+      Text = Shortcut(("Done"), "D")
+    }
+  }
+}

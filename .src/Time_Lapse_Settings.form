@@ -1,0 +1,130 @@
+# Gambas Form File 3.0
+
+{ Form Form
+  MoveScaled(0,0,59,49)
+  Text = ("Time lapse settings")
+  Icon = Picture["PiCamSmall.png"]
+  Arrangement = Arrange.Vertical
+  Padding = 5
+  { HBox2 HBox
+    MoveScaled(3,1,29,4)
+    { Label8 Label
+      MoveScaled(0,0,28,3)
+      Text = ("Time between each photo")
+    }
+  }
+  { VBoxControls VBox
+    MoveScaled(0,6,46,32)
+    { LabelTLTime Label
+      MoveScaled(3,0,29,3)
+      Font = Font["Bold"]
+      Alignment = Align.Center
+    }
+    { Panel5 HBox
+      MoveScaled(0,4,44,4)
+      { SliderTimeLaps Slider
+        MoveScaled(10,0,26,4)
+        Expand = True
+        MinValue = 5
+        MaxValue = 86400
+      }
+    }
+    { HBox9 HBox
+      MoveScaled(0,9,44,3)
+      { Label9 Label
+        MoveScaled(0,0,18,2)
+        Font = Font["Bold"]
+        Expand = True
+        Text = ("<   <   <   <   <   <   <   <")
+        Alignment = Align.BottomNormal
+      }
+      { Label10 Label
+        MoveScaled(24,0,18,2)
+        Font = Font["Bold"]
+        Expand = True
+        Text = (">   >   >   >   >   >   >   >")
+        Alignment = Align.Right
+      }
+    }
+    { HBox10 HBox
+      MoveScaled(0,12,45,4)
+      { ButtonDownVerySlow Button
+        MoveScaled(0,0,7,4)
+        Text = ("1 Sec")
+      }
+      { ButtonDownSlow Button
+        MoveScaled(7,0,7,4)
+        Text = ("1 Min")
+      }
+      { ButtonDownFast Button
+        MoveScaled(14,0,7,4)
+        Text = ("15 Min")
+      }
+      { Panel7 Panel
+        MoveScaled(21,1,2,2)
+        Expand = True
+      }
+      { ButtonUpFast Button
+        MoveScaled(24,0,7,4)
+        Text = ("15 Min")
+      }
+      { ButtonUpSlow Button
+        MoveScaled(31,0,7,4)
+        Text = ("1 min")
+      }
+      { ButtonUpVerySlow Button
+        MoveScaled(38,0,7,4)
+        Text = ("1 sec")
+      }
+    }
+    { Panel3 Panel
+      MoveScaled(14,16,9,1)
+    }
+    { Panel1 HBox
+      MoveScaled(0,18,42,5)
+      Background = Color.LightForeground
+      { Label1 Label
+        MoveScaled(0,0,14,3.1111)
+        Alignment = Align.Right
+      }
+      { LabelMilliSeconds Label
+        MoveScaled(19,0,16,3)
+        AutoResize = True
+        Alignment = Align.Left
+      }
+      { Panel2 Panel
+        MoveScaled(36,1,4,2)
+        Expand = True
+      }
+    }
+    { Label3 Label
+      MoveScaled(0,23,45,4)
+      Text = ("The name of the folder to store your time lapse photos")
+      Alignment = Align.BottomLeft
+    }
+    { LabelTimeLapseFolderName Label
+      MoveScaled(3,27,39,4)
+      Background = Color.LightForeground
+    }
+  }
+  { Panel13 Panel
+    MoveScaled(14,39,13,2)
+    Expand = True
+  }
+  { HBox11 HBox
+    MoveScaled(2,42,47,4)
+    { ButtonSetTimeLapse Button
+      MoveScaled(0,0,18,4)
+      ToolTip = ("Click here to 'Set' the time lapse details")
+      Text = ("&Set")
+    }
+    { Panel14 Panel
+      MoveScaled(19,1,2.7778,2)
+      Expand = True
+    }
+    { ButtonExit Button
+      MoveScaled(27,0,18,4)
+      Text = ("&Exit and Cancel")
+    }
+  }
+}

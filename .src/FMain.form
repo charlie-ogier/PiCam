@@ -1,0 +1,357 @@
+# Gambas Form File 3.0
+
+{ Form Form
+  MoveScaled(0,0,105,74)
+  Icon = Picture["PiCam.png"]
+  Arrangement = Arrange.Vertical
+  Padding = 5
+  { Panel5 HBox
+    MoveScaled(1,0,103,5)
+    { ToolButtonHalt ToolButton
+      MoveScaled(0,0,6,5)
+      Visible = False
+      ToolTip = ("Stop time lapse")
+      Picture = Picture["icon:/32/halt"]
+    }
+    { ToolButtonTimeLapseStart ToolButton
+      MoveScaled(6,0,6,5)
+      Visible = False
+      ToolTip = ("Start time lapse sequence")
+      Picture = Picture["appointment-soon.png"]
+    }
+    { HBox8 HBox
+      MoveScaled(13,0,89,5)
+      Expand = True
+      { ToolButtonTakePhoto ToolButton
+        MoveScaled(0,0,6,5)
+        ToolTip = ("Take a photo. Look out David Bailey!")
+        Picture = Picture["icon:/32/camera"]
+      }
+      { ToolButtonViewPhotos ToolButton
+        MoveScaled(5,0,6,5)
+        ToolTip = ("View photos already taken")
+        Picture = Picture["icon:/32/image"]
+      }
+      { ToolButtonViewTimeLapse ToolButton
+        MoveScaled(11,0,6,5)
+        ToolTip = ("View time lapse photos already taken")
+        Picture = Picture["icon:/32/video"]
+      }
+      { ToolButtonTimeLaps ToolButton
+        MoveScaled(16,0,6,5)
+        ToolTip = ("Setup time lapse")
+        Picture = Picture["icon:/32/clock"]
+      }
+      { ToolButtonOpenFolder ToolButton
+        MoveScaled(21,0,6,5)
+        ToolTip = ("Open the photo folder")
+        Picture = Picture["icon:/32/directory"]
+      }
+      { ToolButtonReset ToolButton
+        MoveScaled(26,0,6,5)
+        ToolTip = ("Reset the 'Options' settings to the default")
+        Picture = Picture["icon:/32/jump"]
+      }
+      { Panel7 Panel
+        MoveScaled(31,0,18.8889,6)
+        Border = Border.Plain
+        { ToolButtonPreviewUp ToolButton
+          MoveScaled(0,0,6,5)
+          ToolTip = ("Increase the preview window size")
+          Picture = Picture["icon:/32/up"]
+        }
+        { ToolButtonPreviewDown ToolButton
+          MoveScaled(12.4444,0,6,5)
+          ToolTip = ("Decrease the preview window size")
+          Picture = Picture["icon:/32/down"]
+        }
+        { LabelPreviewNo Label
+          MoveScaled(6,0,6,5)
+          ToolTip = ("Preview window size")
+          Expand = True
+          Alignment = Align.Center
+        }
+      }
+      { ToolButtonAlign ToolButton
+        MoveScaled(54,0,6,5)
+        ToolTip = ("Align the preview picture")
+        Picture = Picture["icon:/32/grid"]
+      }
+      { ToolButtonAbout ToolButton
+        MoveScaled(63,0,6,5)
+        ToolTip = ("About the program")
+        Picture = Picture["icon:/32/book"]
+      }
+      { Panel13 Panel
+        MoveScaled(71,1,3,3)
+        Expand = True
+      }
+      { ToolButtonExit ToolButton
+        MoveScaled(75,0,6,5)
+        ToolTip = ("Exit - Bye Bye!")
+        Picture = Picture["icon:/32/quit"]
+      }
+    }
+  }
+  { Separator4 Separator
+    MoveScaled(0,5,32,0)
+    Background = Color.Foreground
+  }
+  { HBox1 HBox
+    MoveScaled(1,5,67,4)
+    Padding = 2
+    { LabelPreview Label
+      MoveScaled(0,0,23,3)
+      Font = Font["Bold"]
+      Text = ("Live preview")
+      Alignment = Align.BottomLeft
+    }
+    { ToggleButtonPreview ToggleButton
+      MoveScaled(22,0,13,3)
+      Text = ("Preview type")
+    }
+    { Panel17 Panel
+      MoveScaled(37,0,9.4444,3)
+      Expand = True
+    }
+    { LabelVersion Label
+      MoveScaled(50,0,16,4)
+      Font = Font["Bold"]
+      Alignment = Align.TopRight
+    }
+  }
+  { Panel2 HBox
+    MoveScaled(0,11,81,47)
+    { Panel1 Panel
+      MoveScaled(1,1,46,46)
+      Border = Border.Plain
+      { TextLabel1 TextLabel
+        MoveScaled(0.5556,1,45,45)
+        Text = ("<b>Please wait</b><p>")
+        Alignment = Align.Center
+        Border = Border.Plain
+      }
+      { PictureBoxSSHPreview PictureBox
+        MoveScaled(1,1.7778,44.4444,44.4444)
+      }
+    }
+    { VBoxControls VBox
+      MoveScaled(51,0,33,47)
+      Expand = True
+      Padding = 5
+      { Panel16 HBox
+        MoveScaled(2,1,25,4)
+        { Label1 Label
+          MoveScaled(0,0,11,3)
+          Expand = True
+          Text = ("Effects")
+        }
+        { Label2 Label
+          MoveScaled(13,0,11,3)
+          Expand = True
+          Text = ("Photo size")
+        }
+      }
+      { Panel15 HBox
+        MoveScaled(2,6,28,4)
+        { ComboBoxEffects ComboBox
+          MoveScaled(0,0,11,4)
+          ToolTip = ("Choose an 'effect' for your photo")
+          Expand = True
+          ReadOnly = True
+        }
+        { ComboBoxPhotoSize ComboBox
+          MoveScaled(16,0,12,4)
+          ToolTip = ("Select the size of the photo when taken")
+          Expand = True
+          ReadOnly = True
+        }
+      }
+      { Label3 Label
+        MoveScaled(1,12,11,3)
+        Text = ("Exposure")
+      }
+      { ComboBoxExposure ComboBox
+        MoveScaled(3,15,16,4)
+        ToolTip = ("Set the exposure otions")
+        ReadOnly = True
+      }
+      { Label5 Label
+        MoveScaled(1,19,11,3)
+        Text = ("Image flip")
+      }
+      { HBox5 VBox
+        MoveScaled(2,22,20,14)
+        Background = Color.LightForeground
+        Expand = True
+        Padding = 5
+        { RadioButtonVertical RadioButton RadioFlip
+          Name = "RadioButtonVertical"
+          MoveScaled(1,1,15,3)
+          ToolTip = ("Plip the image vertically")
+          Text = ("Vertical flip")
+        }
+        { RadioButtonHorizontal RadioButton RadioFlip
+          Name = "RadioButtonHorizontal"
+          MoveScaled(1,5,15,3)
+          ToolTip = ("Flip the image horizontally")
+          Text = ("Horizontal flip")
+        }
+        { RadioButtonBoth RadioButton RadioFlip
+          Name = "RadioButtonBoth"
+          MoveScaled(1,8,8,3)
+          ToolTip = ("Flip image both horizontally and vertically")
+          Text = ("Both")
+        }
+        { RadioButtonNone RadioButton RadioFlip
+          Name = "RadioButtonNone"
+          MoveScaled(1,11,15,3)
+          ToolTip = ("Don't flip the image")
+          Text = ("No flip")
+          Value = True
+        }
+      }
+      { Label6 Label
+        MoveScaled(0,36,11,3)
+        Text = ("Rotate image")
+      }
+      { HBox6 HBox
+        MoveScaled(0,39.5556,22,3)
+        Background = Color.LightForeground
+        { LabelRotation0 Label
+          MoveScaled(0,0,4,3)
+          Text = (" 0")
+        }
+        { Panel6 Panel
+          MoveScaled(5,0,1,3)
+          Expand = True
+        }
+        { LabelRotation1 Label
+          MoveScaled(7,0,4,3)
+          Text = ("90")
+        }
+        { Panel9 Panel
+          MoveScaled(11,0,1,3)
+          Expand = True
+        }
+        { LabelRotation2 Label
+          MoveScaled(13,0,4,3)
+          Text = ("180")
+          Alignment = Align.Center
+        }
+        { Panel8 Panel
+          MoveScaled(17,0,1,3)
+          Expand = True
+        }
+        { LabelRotation3 Label
+          MoveScaled(18,0,4,3)
+          Text = ("270")
+          Alignment = Align.Center
+        }
+      }
+      { HBox7 HBox
+        MoveScaled(0,43.5556,22,3)
+        Background = Color.LightForeground
+        { RadioButtonRotation0 RadioButton RotationSet
+          Name = "RadioButtonRotation0"
+          MoveScaled(1,0,2,3)
+          Foreground = Color.LightForeground
+          ToolTip = ("Click to select the amout of image rotation")
+          Value = True
+        }
+        { Panel4 Panel
+          MoveScaled(5,0,1,3)
+          Expand = True
+        }
+        { RadioButtonRotation1 RadioButton RotationSet
+          Name = "RadioButtonRotation1"
+          MoveScaled(7,0,2,3)
+          Foreground = Color.LightForeground
+          ToolTip = ("Click to select the amout of image rotation")
+        }
+        { Panel11 Panel
+          MoveScaled(11,0,1,3)
+          Expand = True
+        }
+        { RadioButtonRotation2 RadioButton RotationSet
+          Name = "RadioButtonRotation2"
+          MoveScaled(13,0,2,3)
+          Foreground = Color.LightForeground
+          ToolTip = ("Click to select the amout of image rotation")
+        }
+        { Panel10 Panel
+          MoveScaled(17,0,1,3)
+          Expand = True
+        }
+        { RadioButtonRotation3 RadioButton RotationSet
+          Name = "RadioButtonRotation3"
+          MoveScaled(19,0,3,3)
+          Foreground = Color.LightForeground
+          ToolTip = ("Click to select the amout of image rotation")
+        }
+      }
+    }
+  }
+  { Panel12 Panel
+    MoveScaled(0,58,12,1)
+    Expand = True
+  }
+  { Separator1 Separator
+    MoveScaled(34,59,32,0)
+    Background = Color.Foreground
+  }
+  { PanelExpander HBox
+    MoveScaled(1,59,61,4)
+    { Label4 Label
+      MoveScaled(1,1,10,2)
+      Text = ("Command")
+      Alignment = Align.BottomLeft
+    }
+    { Panel3 Panel
+      MoveScaled(20,1,6,1)
+      Expand = True
+    }
+    { ToolButtonCopy ToolButton
+      MoveScaled(56,0,5,4)
+      ToolTip = ("Copy command to the clipboard")
+      Picture = Picture["icon:/32/copy"]
+    }
+  }
+  { TimerSSHPreview #Timer
+    #MoveScaled(66,59)
+  }
+  { HBox4 HBox
+    MoveScaled(1,63,60,4)
+    { LabelCommand Label
+      MoveScaled(2,0,25,3)
+      Font = Font["-2"]
+      Expand = True
+    }
+    { LabelTimeToGo Label
+      MoveScaled(31,1,24,3)
+      Visible = False
+      Font = Font["Bold"]
+      Expand = True
+      Alignment = Align.Center
+    }
+  }
+  { Separator2 Separator
+    MoveScaled(31,68,32,0)
+    Background = Color.Foreground
+  }
+  { HBox3 HBox
+    MoveScaled(1,68,60,4)
+    { LabelPhotoTakenName Label
+      MoveScaled(1,1,23,2)
+      Font = Font["Bold,+2"]
+      Expand = True
+      Alignment = Align.Center
+    }
+  }
+  { TimerPreviewControl #Timer
+    #MoveScaled(67,68)
+  }
+  { TimerTimeLapse #Timer
+    #MoveScaled(83,59)
+  }
+}

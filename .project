@@ -1,0 +1,21 @@
+# Gambas Project File 3.0
+# Compiled with Gambas 3.8.4
+Title=PiCam
+Startup=FMain
+Icon=PiCam.png
+Version=0.2.6
+Component=gb.image
+Component=gb.gui
+Component=gb.form
+Component=gb.settings
+Component=gb.media
+Description="GUI for the Raspberry Pi Camera\nWritten in Gambas 3.8.4 for the Raspberry Pi 3 running Raspbian\nSSH Preview option\nSettings for Time lapse, Effects, Exposure, Flip and Rotation\nTime lapse playback \n"
+Authors="Charlie Ogier 2016"
+TabSize=2
+Language=en_GB
+CreateShortcut=1
+Vendor=cogier
+Packager=1
+Tags=Image,ImageProcessing,Photography
+GambasVersion=3.8
+CreateMenu=1

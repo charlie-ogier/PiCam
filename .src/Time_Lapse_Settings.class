@@ -1,0 +1,119 @@
+' Gambas class file
+
+Public iSliderValue As Integer                                      'Stores the value of the slider
+
+Public Sub Form_Open()                                              'The form opens..
+
+If FMain.bTimeLapse = True Then                                     'If the time lapse has been setup..
+  ButtonSetTimeLapse.Caption = "&Cancel time lapse"                 'Change the button text to 'Cancel..'
+  LabelTimeLapseFolderName.text = FMain.sTLUsersFileName            'Put the Time lapse folder name in a label
+  VBoxControls.Enabled = False                                      'Disable the controls
+Else                                                                'Else..
+  ButtonSetTimeLapse.Caption = "&Set"                               'Change the button text to '&Set'
+  VBoxControls.Enabled = True                                       'Enable the controls
+  SetFolderName                                                     'Get a flode name
+  FMain.sTLFolder = "time_lapse" &/ LabelTimeLapseFolderName.text   'Put the Time lapse folder name in a label
+End If
+
+SliderTimeLaps_Change                                               'Go to the skider change routine
+
+End
+
+Public Sub SetFolderName()                                          'To set the folder name
+
+LabelTimeLapseFolderName.text = Format(Now, "yyyy-mm-dd_hh:nn:ss")  'Create a folder name from the date and time
+
+End
+
+Public Sub ButtonSetTimeLapse_Click()                               'What to do if the 'Set' button is clicked
+
+If ButtonSetTimeLapse.Caption = "&Cancel time lapse" Then           'If the button say 'Cancel..' then..
+  FMain.bTimeLapse = False                                          'Tell the main form that the time lapse has been cancelled
+  Me.Close                                                          'Close the form
+  Return                                                            'Get out of here
+Endif
+
+FMain.sTLUsersFileName = LabelTimeLapseFolderName.Text              'Tell the main form what the folder name is
+Message.Title = "Time lapse"                                        'Create title for the message box to display
+Message.Info("Make sure the picture settings are as desired before\npressing the Time Lapse start button", "OK") 'Display message
+FMain.bTimeLapse = True                                             'Tell the main form that the time lape has been set
+FMain.iMilliSeconds = Val(LabelMilliSeconds.text)                   'Pass the amount of milliseconds requested to the main form
+Me.Close                                                            'Close this form
+
+End
+
+Public Sub SliderTimeLaps_Change()                                  'What to do if the slider value changes
+Dim fHours, fMins, fSecs, fStore As Float                           'Variables for the time
+Dim sHour, sMin, sSec As String                                     'Variables for the time
+
+iSliderValue = SliderTimeLaps.Value                                 'Set iSliderValue to reflect the slider position (max is 86400 seconds = 24hours)
+FMain.iMilliSeconds = iSliderValue * 1000                           'Update the main form value
+LabelMilliSeconds.text = Str(FMain.iMilliSeconds)                   'Display the amount of millisecond
+Label1.text = "Milliseconds = "                                     'Display what the value is
+
+fHours = iSliderValue / 3600                                        'Calculate the hours 
+fHours = Int(fhours)                                                'Make the value a interger
+fStore = iSliderValue - (fHours * 3600)                             'Caculate whats left after the hours have been removed
+fMins = fStore / 60                                                 'Calculate the minutes
+fMins = Int(fMins)                                                  'Make the value an interger
+fStore = fStore - (fMins * 60)                                      'Calculate what's left after the minutes have been removed
+fSecs = fStore                                                      'What's left are seconds
+
+sHour = " Hour "                                                    'Prepare the hour delay display
+If fHours = 0 Or fHours > 1 Then sHour = " Hours "                  'If the 'Hours' are zero or more that one then display 'Hours' not 'Hour'
+
+sMin = " Minute "                                                   'Prepare the minute delay display
+If fMins = 0 Or fMins > 1 Then sMin = " Minutes "                   'If the 'Minutes' are zero or more that one then display 'Minutes' not 'Minute'
+
+sSec = " Second"                                                    'Prepare the seconds delay display
+If fSecs = 0 Or fSecs > 1 Then sSec = " Seconds"                    'If the 'Seconds' are zero or more that one then display 'Seconds' not 'Second'
+
+LabelTLTime.text = Str(Int(fHours)) & sHour & Str(Int(fMins)) &
+  sMin & Str(fSecs) & sSec                                          ' Display the delay time
+
+End
+
+Public Sub ButtonDownFast_Click()                                   'What to do if the 'Down fast'button is clicked
+
+SliderTimeLaps.value = (Int(SliderTimeLaps.value / 900) * 900) - 900 'Adjust the slider value
+
+End
+
+Public Sub ButtonUpFast_Click()                                     'What to do if the 'Up fast' button is clicked
+
+SliderTimeLaps.value = (Int(SliderTimeLaps.value / 900) * 900) + 900 'Adjust the slider value
+
+End
+
+Public Sub ButtonDownSlow_Click()                                   'What to do if the 'Down slow' button is clicked
+
+SliderTimeLaps.value -= 60                                          'Adjust the slider value
+
+End
+
+Public Sub ButtonUpSlow_Click()                                     'What to do if the 'Up slow' button is clicked
+
+SliderTimeLaps.value += 60                                          'Adjust the slider value
+
+End
+
+Public Sub ButtonDownVerySlow_Click()                               'What to do if the' Down very slow' button is clicked
+
+SliderTimeLaps.value -= 1                                           'Adjust the slider value
+
+End
+
+Public Sub ButtonUpVerySlow_Click()                                 'What to do if the 'Up very slow' button is clicked
+
+SliderTimeLaps.value += 1                                           'Adjust the slider value
+
+End
+
+Public Sub ButtonExit_Click()                                       'What to do if the 'Exit' button is clicked
+
+FMain.bTimeLapse = False                                            'Tell the main form that the timer has not been set
+Me.Close                                                            'Close the form
+
+End
+
+

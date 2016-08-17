@@ -1,0 +1,115 @@
+' Gambas class file
+
+Public siPhotocounter As Short                                      'Store the amount of photos in the folder
+Public siCounter As Short                                           'Counts through the photo as they are displayed
+Public sFolder As String                                            'Stores the time lapse folder name
+Public sPhotos As New String[]                                      'Stores the list of photo file names
+
+Public Sub Form_open() 
+
+Me.Center                                                           'Put the form in the center of the display
+SetUpComboBox                                                       'Setup the ComboBox with Folder names
+TimerPlay.delay = 50                                                'Set the default delay
+SliderSpeed.value = 50                                              'Setup the slider
+Label1.text = "Delay between photos is 0.500 seconds"               'Display the label
+ComboBoxDirList_Click
+
+End
+
+Public Sub ButtonPlay_Click()                                       'What to do if the 'Play' button is clicked
+Dim sLSStore, sTemp As String                                       'Stores the output of 'ls' (and a temp string)
+Dim siCount As Short = -1                                           'Counter
+
+If ButtonPlay.text = "&Play" Then                                   'If the button text = 'Play' then..
+  ButtonPlay.text = "&Stop"                                         'Change it to 'Stop'
+  HBox2.Enabled = False                                             'Stop the ComboBox being used
+Else                                                                'Else..
+  ButtonPlay.text = "&Play"                                         'Change the button text
+  TimerPlay.Stop                                                    'Stop the timer
+  HBox2.Enabled = True                                              'Allow the CoboBox to be used
+  Return                                                            'Get out of here
+Endif
+
+sFolder = User.home &/ "Pictures/PiCam/time_lapse" &/ ComboBoxDirList.Text 'Stores the choosen floder name
+
+Shell "ls " & sFolder To sLSStore                                   'Fill sLSStore with the file names in the chossen folder
+sLSStore = Left(sLSStore, Len(sLSStore) - 1)                        'Get rid of the last "\n" NewLine charater
+
+
+For Each sTemp In Split(sLSStore, "\n")                             'For each file name in the sSLStore
+  Inc siCount                                                       'Increase value of counter
+  sPhotos.add(sTemp)                                                'Add the fime name to the 'sPhotos' string array
+Next
+
+siPhotocounter = siCount                                            'Store the total amount of photos in the chosen folder
+
+If siCount = -1 Then                                                'If there are no photos then..
+  ButtonPlay.text = "&Play"                                         'Change the 'Play' button text
+  TimerPlay.Stop                                                    'Stop the timer
+  HBox2.Enabled = True                                              'Enabel the ComboBox
+  Return                                                            'Get out of here
+Endif
+
+TimerPlay.Start                                                     'Start the timer
+
+End
+
+Public Sub SetUpComboBox()                                          'Setup the ComboBox
+Dim sDir, sTemp As String                                           'Store folder names and a temp string
+Dim sSortList As New String[]                                       'Array to store the list of folders
+Dim siCount, siLoop As Short                                        'For counters and loops
+
+Shell "cd " &/ FMain.sLocation &/ "time_lapse && ls -d */" To sDir  'Get the list of folders only and put into sDir
+
+For Each sTemp In Split(sDir, "\n")                                 'For each folder(sTemp) in sDir
+  sTemp = Replace(sTemp, "/", "")                                   'Get rid of the "/" in the folder name
+  sSortList.Add(sTemp)                                              'Add folder to the 'sSortList' array
+  Inc siCount                                                       'Increase the value of the counter
+Next
+
+sSortList.Sort(gb.Descent)                                          'Sort the folder list with the latest at the top
+
+Dec siCount                                                         'Decrease the counter (The last item in the array is a NewLine and we don't want to use this)
+
+For siLoop = 0 To siCount                                           'For each file name
+  ComboBoxDirList.Add(sSortList[siLoop])                            'Add it to the ComboBox
+Next
+
+If siCount < 0 Then Return                                          'If there are no files then get out of here
+ComboBoxDirList.Text = sSortList[0]                                 'Put the first folder name in the ComboBox
+
+End
+
+Public Sub TimerPlay_Timer()                                        'Plays the time lapse sequence
+
+If siCounter > siPhotocounter Then siCounter = 0                    'If we have seen all the photos go back to the 1st one
+PictureBoxPlay.Picture = Picture.Load(sFolder &/ sPhotos[siCounter]) 'Show the next picture in the PictureBox
+LabelPhotoName.text = sPhotos[siCounter]
+Inc siCounter                                                       'Increase the counter
+
+End
+
+Public Sub SliderSpeed_Change()                                     'What to do if the slider changes
+
+TimerPlay.Delay = SliderSpeed.Value                                 'The slider value becomes the timer delay value
+SliderSpeed.Tooltip = "Left for less delay right for more"          'Add a tool tp to the slider
+Label1.text = "Delay between photos is " & Format(Str(SliderSpeed.Value / 1000), "0.000") & " seconds" 
+                                                                    'Show the delay time in the Label
+End
+
+Public Sub ButtonDone_Click()                                       'What to do when the 'Done' button is clicked
+
+TimerPlay.Stop                                                      'Stop the timer
+Me.Close                                                            'Close the form
+
+End
+
+Public Sub ComboBoxDirList_Click()
+
+sFolder = User.home &/ "Pictures/PiCam/time_lapse" &/ ComboBoxDirList.Text 'Stores the choosen floder name
+Try PictureBoxPlay.Picture.clear
+PictureBoxPlay.Picture = PictureBoxPlay.Picture ' Null
+Try PictureBoxPlay.Picture = Picture.Load(sFolder &/ "0000.jpg")    'Shows the 1st picture in the PictureBox
+
+
+End

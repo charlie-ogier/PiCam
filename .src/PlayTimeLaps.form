@@ -1,0 +1,67 @@
+# Gambas Form File 3.0
+
+{ Form Form
+  MoveScaled(0,0,55.5556,68.4444)
+  Icon = Picture["PiCamSmall.png"]
+  Arrangement = Arrange.Vertical
+  Padding = 5
+  { HBox2 HBox
+    MoveScaled(1,1,51,4.4444)
+    Padding = 2
+    { LabelFolder Label
+      MoveScaled(1,0,17,4)
+      Expand = True
+      Text = ("Choose the folder ")
+      Alignment = Align.Right
+    }
+    { ComboBoxDirList ComboBox
+      MoveScaled(18,0,32,4)
+      ReadOnly = True
+    }
+  }
+  { Panel1 VBox
+    MoveScaled(5,8,48,21)
+    Expand = True
+    Padding = 5
+    { PictureBoxPlay PictureBox
+      MoveScaled(0,0,18,14)
+      Expand = True
+      Stretch = True
+    }
+  }
+  { TimerPlay #Timer
+    #MoveScaled(6,33)
+  }
+  { HBox3 VBox
+    MoveScaled(4,48,43,6)
+    Padding = 1
+    { LabelPhotoName Label
+      MoveScaled(12,0,18,3)
+      Font = Font["Bold"]
+      Alignment = Align.Center
+    }
+    { Label1 Label
+      MoveScaled(15,3,14,3)
+      Expand = True
+      Alignment = Align.Bottom
+    }
+  }
+  { HBox1 HBox
+    MoveScaled(5,58,43,4.4444)
+    Padding = 2
+    { ButtonPlay Button
+      MoveScaled(2,0,10,4)
+      Text = ("&Play")
+    }
+    { SliderSpeed Slider
+      MoveScaled(13,1,18,3)
+      Expand = True
+      MinValue = 50
+      MaxValue = 2000
+    }
+    { ButtonDone Button
+      MoveScaled(32,0,10,4)
+      Text = ("&Done")
+    }
+  }
+}

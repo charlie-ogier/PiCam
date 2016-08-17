@@ -1,0 +1,49 @@
+' Gambas class file
+
+Public Sub ButtonGroup_Click()                                      'If a direction button is clicked..
+Dim sWhichButton As String
+Dim siAdjust As Short
+
+sWhichButton = Last.name                                            'Store the name of the button clicked
+
+If ToggleButtonCorse.value = True Then                              'If Togglebutton is set on 'Coarse' then
+  siAdjust = 10                                                     'Adjustment value is 10
+Else                                                                'Else..
+  siAdjust = 1                                                      'Adjustment value is 1
+Endif
+
+Select Case sWhichButton                                            'To act on the correct vairable
+  Case "ButtonUp"                                                   'If Up then..
+    FMain.siUpDown -= siAdjust                                      'Decrease the value of siUpDown
+  Case "ButtonDown"                                                 'If Down then..
+    FMain.siUpDown += siAdjust                                      'Increase the value of siUpDown
+  Case "ButtonLeft"                                                 'If Left then ..
+    FMain.siRightLeft -= siAdjust                                   'Decrease the value of siRightLeft
+  Case "ButtonRight"                                                'If Right then ..
+    FMain.siRightLeft += siAdjust                                   'Increase the value of siRightLeft
+End Select
+
+AlignPreview.Enabled = False                                        'Disable the Alig form
+FMain.KillPreview                                                   'Kill the Preview
+Wait FMain.fDelay                                                   'Wait
+FMain.SetUpPreview                                                  'Start the Preview
+AlignPreview.Enabled = True                                         'Enable the Align form
+
+End
+
+Public Sub ButtonExit_Click()                                       'Exit button
+
+FMain.bAlign = False                                                'To allow the normal behaviour of the Preview when the main form deactivates
+Me.Close                                                            'Close the Align Form
+
+End
+
+Public Sub ToggleButtonCorse_Click()                                'To allow the user to move the Preview window with Coarse or Fine adjustment
+
+If ToggleButtonCorse.value = True Then                              'If the button is toggled for 'Coarse' then
+  LabelCoarseFine.Text = "Coarse"                                   'Display 'Coarse'
+Else                                                                'Else..
+  LabelCoarseFine.Text = "Fine"                                     'Display 'Fine
+Endif
+
+End
